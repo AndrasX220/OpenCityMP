@@ -1,0 +1,44 @@
+name: Nyugati Zona - Godot validation
+on:
+  push:
+    paths:
+      - 'games/nyugati-zona/**'
+      - '.github/workflows/nyugati-zona.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  godot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download official Godot 4.7.2
+        env:
+          GODOT_VERSION: 4.7.2
+        run: |
+          python3 - <<'PY'
+          import os, pathlib, urllib.request, zipfile
+          version = os.environ["GODOT_VERSION"]
+          url = f"https://github.com/godotengine/godot-builds/releases/download/{version}-stable/Godot_v{version}-stable_linux.x86_64.zip"
+          archive = pathlib.Path(os.environ["RUNNER_TEMP"]) / "godot.zip"
+          folder = archive.parent / "godot"
+          urllib.request.urlretrieve(url, archive)
+          with zipfile.ZipFile(archive) as z:
+              z.extractall(folder)
+          binary = next(folder.glob("Godot*"))
+          binary.chmod(0o755)
+          with open(os.environ["GITHUB_ENV"], "a") as f:
+              f.write(f"GODOT_BIN={binary}\n")
+          PY
+      - name: Import and run integration smoke tests
+        run: python3 games/nyugati-zona/tools/validate.py
+      - name: Upload validation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nyugati-zona-validation
+          path: |
+            games/nyugati-zona/import.log
+            games/nyugati-zona/smoke.log
+          if-no-files-found: ignore
