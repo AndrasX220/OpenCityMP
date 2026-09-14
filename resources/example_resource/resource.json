@@ -1,0 +1,12 @@
+{
+  "name": "example_resource",
+  "version": "0.1.0",
+  "description": "OpenCityMP MTA-style resource example. Lua execution arrives in V0.3.",
+  "scripts": {
+    "server": [
+      "server/main.lua"
+    ],
+    "client": [],
+    "shared": []
+  }
+}
