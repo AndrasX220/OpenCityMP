@@ -1,0 +1,7 @@
+.godot/
+.mono/
+bin/
+obj/
+*.user
+*.userprefs
+.DS_Store
