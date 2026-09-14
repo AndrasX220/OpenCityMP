@@ -50,3 +50,22 @@ Helyi ellenőrzés:
 - R: vissza a rajthoz
 - Egér/görgő/C: kamera
 - A kért W210 csak sikeres import és engedélyellenőrzés után kerülhet bele
+
+## Referencia-karakter
+
+Saját C#-ból generált, lapos felületnormálokkal épített low-poly figura:
+szürke ruha, heveder, kopasz szögletes fej, napszemüveg, fejhallgató,
+külön ujjak és bakancs. A referencia alapján készült közelítés, nem pontos másolat.
+Nincs Skeleton3D vagy járásanimáció. Ülő/álló változat létezik.
+
+A főpályán a rajt mellett ül egy kék kockán. Részletes ellenőrzéshez nyisd meg
+a Scenes/CharacterPreview.tscn jelenetet és F6: bal egér húzása forgat, görgő zoomol.
+A régi PlayerController vizuálja szintén lecserélve; a főpálya továbbra is autóval indul.
+Az autóba ülés/kiszállás ezzel nem készült el.
+
+Az EmacE Art égbolt ZIP megérkezett, de a jelenlegi eszközök nem tudják olvasni
+a helyi archívumot. Az asset és licence nem lett feldolgozva, nincs integrálva.
+Az eddigi égbolt maradt. Az eredeti shader/material/licenc kicsomagolt szövege
+szükséges a következő lépéshez.
+
+A karakter fordítása és vizuális egyezése Godotban még NEM tesztelt.

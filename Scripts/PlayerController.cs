@@ -42,76 +42,9 @@ public partial class PlayerController : CharacterBody3D
 
         _visual = new Node3D { Name = "CharacterVisual" };
         AddChild(_visual);
-
-        var skin = new StandardMaterial3D
-        {
-            AlbedoColor = new Color("d9a06f"),
-            Roughness = 0.92f
-        };
-        var shirt = new StandardMaterial3D
-        {
-            AlbedoColor = new Color("f15b64"),
-            Roughness = 0.9f
-        };
-        var jeans = new StandardMaterial3D
-        {
-            AlbedoColor = new Color("253a63"),
-            Roughness = 0.95f
-        };
-        var dark = new StandardMaterial3D
-        {
-            AlbedoColor = new Color("161822"),
-            Roughness = 0.95f
-        };
-
-        AddPart(_visual, "Body", new CapsuleMesh
-        {
-            Radius = 0.40f,
-            Height = 1.08f,
-            RadialSegments = 8,
-            Rings = 4
-        }, new Vector3(0.0f, 1.18f, 0.0f), shirt);
-
-        AddPart(_visual, "Head", new SphereMesh
-        {
-            Radius = 0.31f,
-            Height = 0.62f,
-            RadialSegments = 8,
-            Rings = 4
-        }, new Vector3(0.0f, 1.92f, 0.0f), skin);
-
-        AddPart(_visual, "LegLeft", new BoxMesh
-        {
-            Size = new Vector3(0.28f, 0.68f, 0.30f)
-        }, new Vector3(-0.20f, 0.46f, 0.0f), jeans);
-        AddPart(_visual, "LegRight", new BoxMesh
-        {
-            Size = new Vector3(0.28f, 0.68f, 0.30f)
-        }, new Vector3(0.20f, 0.46f, 0.0f), jeans);
-
-        AddPart(_visual, "Hair", new SphereMesh
-        {
-            Radius = 0.315f,
-            Height = 0.28f,
-            RadialSegments = 8,
-            Rings = 3
-        }, new Vector3(0.0f, 2.12f, 0.01f), dark);
-    }
-
-    private static void AddPart(
-        Node3D parent,
-        string name,
-        PrimitiveMesh mesh,
-        Vector3 position,
-        Material material)
-    {
-        parent.AddChild(new MeshInstance3D
-        {
-            Name = name,
-            Mesh = mesh,
-            Position = position,
-            MaterialOverride = material
-        });
+        // Controller's visual front is +Z, the authored character front is -Z.
+        _visual.AddChild(new ReferenceCharacter { Seated = false,
+            Rotation = new Vector3(0, Mathf.Pi, 0) });
     }
 
     private void BuildCamera()
