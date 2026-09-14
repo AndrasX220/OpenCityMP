@@ -9,13 +9,26 @@ func _draw() -> void:
 	for p in [Vector2(10,22),Vector2(36,12),Vector2(55,23),Vector2(29,34)]:
 		pts.append(p*s)
 	match item_id:
-		"axe","pistol","rifle","repair":
+		"axe","repair":
 			draw_set_transform(Vector2(32,32)*s,-0.6,s)
 			draw_rect(Rect2(-3,-22,6,46),Color("#9b7350"))
 			draw_rect(Rect2(-3,-21,25,13),col)
 			if item_id in ["pistol","rifle"]:
 				draw_rect(Rect2(0,-18,4,28),Color("#313d39"))
 				draw_rect(Rect2(0,7,14,7),Color("#303d39"))
+		"pistol":
+			draw_set_transform(Vector2.ZERO,0,s)
+			draw_rect(Rect2(12,19,42,10),Color("#879087"))
+			draw_rect(Rect2(13,29,14,6),Color("#434c46"))
+			draw_colored_polygon(PackedVector2Array([Vector2(15,29),Vector2(27,29),Vector2(23,51),Vector2(10,48)]),Color("#846040"))
+			draw_rect(Rect2(30,31,10,10),Color("#48524a"),false,3)
+		"rifle":
+			draw_set_transform(Vector2(32,32),-0.30,s)
+			draw_rect(Rect2(-14,-4,31,8),Color("#54625b"))
+			draw_rect(Rect2(17,-2,14,4),Color("#38413e"))
+			draw_rect(Rect2(-29,-4,15,10),Color("#996d44"))
+			draw_rect(Rect2(5,4,6,13),Color("#424e43"))
+			draw_rect(Rect2(-10,4,5,10),Color("#775939"))
 		"water","fuel","battery","generator":
 			draw_rect(Rect2(Vector2(17,20)*s,Vector2(31,32)*s),col.darkened(0.15))
 			draw_colored_polygon(PackedVector2Array([Vector2(17,20)*s,Vector2(26,12)*s,Vector2(54,16)*s,Vector2(48,20)*s]),col.lightened(0.24))

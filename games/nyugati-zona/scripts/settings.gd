@@ -1,6 +1,6 @@
 extends RefCounted
 const PATH:String="user://settings.cfg"
-var values:Dictionary={"quality":2,"shadows":true,"fog":true,"msaa":2,"scale":1.0,"distance":750,"fov":78,"sensitivity":0.0022,"fullscreen":false,"vsync":true,"fps":120,"volume":0.65,"hour":17.4,"cycle":true,"clouds":0.52}
+var values:Dictionary={"quality":2,"shadows":true,"fog":true,"msaa":2,"scale":1.0,"distance":750,"fov":78,"sensitivity":0.0022,"fullscreen":false,"vsync":true,"fps":120,"volume":0.65,"hour":17.4,"cycle":true,"clouds":0.38}
 func load_settings() -> void:
 	var c:ConfigFile=ConfigFile.new()
 	if c.load(PATH)!=OK:

@@ -21,6 +21,7 @@ var vehicle_id:String=""
 var third_person:bool=true
 var pitch:float=-0.10
 var phase:float=0.0
+var swing:float=0.0
 var action_cooldown:float=0.0
 var bleeding:float=0.0
 var infection:float=0.0
@@ -68,6 +69,21 @@ func update_equipment() -> void:
 		visual.get_node("Gear").visible=inventory.has("backpack")
 	if view_weapon and rendered_equipment!=equipment:
 		rendered_equipment=equipment
+		var hand:Node3D=visual.get_node("ArmR")
+		var previous:Node=hand.get_node_or_null("HeldEquipment")
+		if previous:
+			hand.remove_child(previous)
+			previous.queue_free()
+		var held:Node3D=Node3D.new()
+		held.name="HeldEquipment"
+		hand.add_child(held)
+		held.position=Vector3(0,-0.52,0)
+		if equipment in ["pistol","rifle"]:
+			held.rotation.x=1.1
+			Art.weapon(held,equipment=="rifle")
+		elif equipment=="axe":
+			Art.box(held,Vector3(0,0.02,-0.16),Vector3(0.05,0.05,0.56),Color("#926945"))
+			Art.box(held,Vector3(0,0.04,-0.40),Vector3(0.045,0.22,0.16),Color("#969e92"))
 		for c in view_weapon.get_children():
 			c.queue_free()
 		if equipment in ["pistol","rifle"]:
@@ -87,11 +103,13 @@ func _unhandled_input(event:InputEvent) -> void:
 		light.visible=not light.visible
 func _physics_process(delta:float) -> void:
 	action_cooldown=maxf(0,action_cooldown-delta)
+	swing=maxf(0,swing-delta)
 	if not local:
 		if not game.authoritative():
 			position=position.lerp(remote_target,minf(1.0,delta*12))
 		phase+=delta*5
 		Art.animate_character(visual,phase,0.3 if position.distance_to(remote_target)>0.07 else 0.0)
+		pose_arms()
 		return
 	if not game.playing:
 		return
@@ -144,6 +162,7 @@ func _physics_process(delta:float) -> void:
 	view_weapon.visible=not third_person and not mounted
 	phase+=delta*Vector2(velocity.x,velocity.z).length()*2.6
 	Art.animate_character(visual,phase,minf(0.6,Vector2(velocity.x,velocity.z).length()*0.1))
+	pose_arms()
 	camera.fov=lerpf(camera.fov,float(game.settings.values.fov)*(0.75 if enabled and Input.is_action_pressed("aim") else 1.0),delta*8)
 func survival_tick(delta:float) -> void:
 	if not is_alive():
@@ -167,3 +186,11 @@ func ray(max_distance:float=4.5) -> Dictionary:
 	return get_world_3d().direct_space_state.intersect_ray(q)
 func pack_state() -> Dictionary:
 	return {"id":peer_id,"p":[position.x,position.y,position.z],"yaw":rotation.y,"health":health,"hunger":hunger,"thirst":thirst,"stamina":stamina,"bleeding":bleeding,"inventory":inventory,"equipment":equipment,"magazine":magazine,"rifle_magazine":rifle_magazine,"vehicle":vehicle_id,"deaths":deaths}
+
+func pose_arms() -> void:
+	if equipment in ["pistol","rifle"]:
+		visual.get_node("ArmR").rotation.x=-1.1-swing
+		visual.get_node("ArmL").rotation.x=-1.0 if equipment=="rifle" else -0.35
+	elif swing>0:
+		visual.get_node("ArmR").rotation.x=-sin(swing/0.24*PI)*1.8
+	view_weapon.rotation.x=-swing*1.4

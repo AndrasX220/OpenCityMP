@@ -119,7 +119,14 @@ func _process(delta:float) -> void:
 			if p.vehicle_id!="" and game.vehicles.has(p.vehicle_id) and Time.get_ticks_msec()*0.001-float(last_packet.get(id,0))>0.5:
 				game.vehicles[p.vehicle_id].drive_input=Vector2.ZERO
 				game.vehicles[p.vehicle_id].brake=true
-		snapshot.rpc(game.pack_snapshot())
+		var state:Dictionary=game.pack_snapshot()
+		# Keep ordinary unreliable packets below the typical MTU.
+		for player_state in state.players:
+			snapshot.rpc({"players":[player_state],"hour":state.hour})
+		for vehicle_state in state.vehicles:
+			snapshot.rpc({"vehicles":[vehicle_state]})
+		for offset in range(0,state.zombies.size(),4):
+			snapshot.rpc({"zombies":state.zombies.slice(offset,offset+4)})
 		if pending_world:
 			world_state.rpc(game.pack_world())
 			pending_world=false

@@ -131,7 +131,9 @@ func close() -> void:
 	clear("")
 func show_main() -> void:
 	clear("main")
-	var v:VBoxContainer=panel(Vector2(65,105),Vector2(520,690),"NYUGATI ZÓNA")
+	var v:VBoxContainer=panel(Vector2(65,75),Vector2(545,755),"NYUGATI ZÓNA")
+	v.get_child(0).add_theme_font_size_override("font_size",46)
+	v.get_child(0).add_theme_color_override("font_color",Color("#ece1c3"))
 	caption(v,"TÚLÉLNI. EGYÜTT. OTTHONT ÚJRA.",18)
 	caption(v,"2008. október 12.\nBerekfalva, a nyugati karanténzóna.",21)
 	caption(v,"A főút még hazavezet. Csak már nincs, aki várjon.",18)

@@ -6,7 +6,7 @@ var sky_material:ShaderMaterial
 var hour:float=17.4
 var day_seconds:float=2400.0
 var cycle:bool=true
-var cloud_cover:float=0.52
+var cloud_cover:float=0.38
 var clock:float=0.0
 var quality:int=2
 var fog_on:bool=true
@@ -26,8 +26,8 @@ func _ready() -> void:
 	environment.ambient_light_sky_contribution=0.3
 	environment.tonemap_mode=Environment.TONE_MAPPER_FILMIC
 	environment.fog_enabled=true
-	environment.fog_density=0.0018
-	environment.fog_sky_affect=0.18
+	environment.fog_density=0.0013
+	environment.fog_sky_affect=0.04
 	environment.adjustment_enabled=true
 	environment.adjustment_saturation=0.92
 	environment.adjustment_contrast=1.04
@@ -67,12 +67,12 @@ func refresh() -> void:
 	moon.rotation_degrees=Vector3(-44,-30,0)
 	moon.light_energy=0.18*(1.0-daylight)
 	environment.ambient_light_color=Color("#6b7891").lerp(Color("#b7bdc9"),daylight)
-	environment.ambient_light_energy=lerpf(0.25,0.67,daylight)
+	environment.ambient_light_energy=lerpf(0.20,0.48,daylight)
 	environment.fog_light_color=Color("#252f48").lerp(Color("#a89b83").lerp(Color("#c9916f"),dusk),daylight)
-	sky_material.set_shader_parameter("zenith",Color("#0b162e").lerp(Color("#48759b").lerp(Color("#454c76"),dusk),daylight))
-	sky_material.set_shader_parameter("horizon",Color("#232c45").lerp(Color("#c3c7b4").lerp(Color("#ed9863"),dusk),daylight))
-	sky_material.set_shader_parameter("cloud_light",Color("#2b344e").lerp(Color("#e2ded0").lerp(Color("#eba775"),dusk),daylight))
-	sky_material.set_shader_parameter("cloud_shadow",Color("#161e30").lerp(Color("#8497a5").lerp(Color("#706072"),dusk),daylight))
+	sky_material.set_shader_parameter("zenith",Color("#0b162e").lerp(Color("#48759b").lerp(Color("#404367"),dusk),daylight))
+	sky_material.set_shader_parameter("horizon",Color("#232c45").lerp(Color("#c3c7b4").lerp(Color("#fa7e36"),dusk),daylight))
+	sky_material.set_shader_parameter("cloud_light",Color("#2b344e").lerp(Color("#e2ded0").lerp(Color("#ee8b45"),dusk),daylight))
+	sky_material.set_shader_parameter("cloud_shadow",Color("#161e30").lerp(Color("#8497a5").lerp(Color("#70596a"),dusk),daylight))
 	sky_material.set_shader_parameter("sun_dir",dir)
 	sky_material.set_shader_parameter("daylight",daylight)
 	sky_material.set_shader_parameter("cloud_cover",cloud_cover)

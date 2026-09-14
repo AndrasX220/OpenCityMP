@@ -65,9 +65,9 @@ func _ready() -> void:
 	audio=Sound.new()
 	add_child(audio)
 	title_camera=Camera3D.new()
-	title_camera.position=Vector3(26,10,79)
+	title_camera.position=Vector3(3.5,4.5,63)
 	add_child(title_camera)
-	title_camera.look_at(Vector3(0,4,-44))
+	title_camera.look_at(Vector3(5,2,-38))
 	title_camera.current=true
 	add_player(1,true)
 	local_player.camera.current=false
@@ -455,7 +455,9 @@ func execute_action(id:int,action:String,payload:Dictionary) -> void:
 			p.mounted=false
 			update_carried_log(p)
 	p.update_equipment()
-	mark_world()
+	if action not in ["attack","reload","equip","use"]:mark_world()
+	if p==local_player and ui.screen=="inventory" and action in ["use","equip","deposit"]:
+		ui.show_inventory(ui.current_container)
 
 func reload_weapon(p:Node) -> void:
 	if p.action_cooldown>0:return
@@ -484,6 +486,7 @@ func attack(p:Node,payload:Dictionary) -> void:
 			return
 		if rifle:p.rifle_magazine-=1
 		else:p.magazine-=1
+	p.swing=0.24
 	p.action_cooldown=0.16 if rifle else (0.3 if gun else 0.55)
 	var reach:float=200 if gun else 2.9
 	var q:PhysicsRayQueryParameters3D=PhysicsRayQueryParameters3D.create(origin,origin+dir*reach,1|4)
@@ -501,6 +504,7 @@ func attack(p:Node,payload:Dictionary) -> void:
 		if int(collider.data.get("hp",0))<=0:return
 		collider.data.hp=maxi(0,int(collider.data.hp)-32)
 		collider.refresh()
+		mark_world()
 		if collider.data.hp<=0:
 			world.spawn_thing(collider.uid+"_log","log",collider.position+Vector3(1.4,0,0))
 			tell(p.peer_id,"Fa kivágva. [E] Vedd vállra a rönköt, majd vidd a munkapadhoz.")
@@ -722,6 +726,7 @@ func pack_snapshot() -> Dictionary:
 	for p in players.values():
 		var entry:Dictionary=p.pack_state()
 		entry["mounted"]=p.mounted
+		entry["swing"]=p.swing
 		ps.append(entry)
 	for v in vehicles.values():vs.append(v.pack_state())
 	for z in zombies.values():zs.append(z.pack_state())
@@ -735,7 +740,7 @@ func pack_world() -> Dictionary:
 	state["version"]=1
 	return state
 func apply_snapshot(state:Dictionary,restore_position:bool=false) -> void:
-	atmosphere.hour=float(state.get("hour",17.4))
+	if state.has("hour"):atmosphere.hour=float(state.hour)
 	for d in state.get("players",[]):
 		var id:int=int(d.id)
 		if not players.has(id):add_player(id,id==multiplayer.get_unique_id())
@@ -745,7 +750,7 @@ func apply_snapshot(state:Dictionary,restore_position:bool=false) -> void:
 			p.remote_target=pos
 			if authoritative() or restore_position:p.position=pos
 			p.rotation.y=float(d.yaw)
-		for key in ["health","hunger","thirst","bleeding","magazine","rifle_magazine","deaths"]:
+		for key in ["health","hunger","thirst","bleeding","magazine","rifle_magazine","deaths","swing"]:
 			if d.has(key):p.set(key,d[key])
 		p.inventory=d.get("inventory",{}).duplicate()
 		p.equipment=str(d.get("equipment","hands"))
@@ -803,6 +808,9 @@ func apply_world(state:Dictionary,restore_position:bool=false) -> void:
 		t.refresh()
 	apply_snapshot(state,restore_position)
 	loading_state=false
+	if ui and playing:
+		if ui.screen=="inventory":ui.show_inventory(ui.current_container)
+		elif ui.screen=="craft":ui.show_craft()
 func save_game() -> bool:
 	if not authoritative() or not playing:
 		if ui:ui.toast("A közös világot a fogadó gép menti.")
@@ -859,6 +867,38 @@ func smoke_test() -> void:
 	execute_action(1,"reload",{})
 	assert(p.magazine==7 and p.inventory.ammo==7,"Reload conservation failed.")
 	assert(not can_build(p,"wall",Vector3(90,0.25,90),0),"Unsupported wall should be denied.")
+	# Exercise the playable construction, fuel and forestry loop.
+	p.position=Vector3(84,0.2,90)
+	await get_tree().physics_frame
+	execute_action(1,"build",{"kind":"foundation","p":[88,0,90],"yaw":0.0})
+	await get_tree().physics_frame
+	execute_action(1,"build",{"kind":"wall","p":[88,0.25,91],"yaw":0.0})
+	assert(builds.size()==2,"Foundation and supported wall should be constructible.")
+	p.position=things.station_gen.position+Vector3(0,0.2,1)
+	execute_action(1,"interact",{"id":"station_gen"})
+	assert(things.station_gen.data.on,"Generator should start using inventory fuel.")
+	p.position=things.pump.position+Vector3(0,0.2,1)
+	execute_action(1,"interact",{"id":"pump"})
+	assert(things.pump.data.liters==445,"Powered pump must consume finite world fuel.")
+	var tree:Node
+	for t in things.values():
+		if t.kind=="tree":
+			tree=t
+			break
+	assert(tree!=null,"Choppable tree missing.")
+	p.position=tree.position+Vector3(0,0.2,2)
+	execute_action(1,"equip",{"item":"axe"})
+	await get_tree().physics_frame
+	for i in range(4):
+		p.action_cooldown=0
+		execute_action(1,"attack",{"target":vec_pack(tree.position+Vector3.UP*1.4)})
+	assert(tree.data.hp==0,"Axe should fell tree after four hits.")
+	execute_action(1,"interact",{"id":tree.uid+"_log"})
+	assert(p.mounted,"Log should be carried.")
+	p.position=things.workbench.position+Vector3(0,0.2,1)
+	var wood_before:int=int(p.inventory.get("wood",0))
+	execute_action(1,"interact",{"id":"workbench"})
+	assert(not p.mounted and int(p.inventory.wood)==wood_before+4,"Workbench should convert carried log to planks.")
 	var saved:Dictionary=pack_world().duplicate(true)
 	assert(saved.things.size()>40 and saved.zombies.size()==40,"World content missing.")
 	assert(world.path_to(Vector3(0,0,30),Vector3(0,0,-50)).size()>0,"Road path missing.")
@@ -866,6 +906,10 @@ func smoke_test() -> void:
 	p.inventory={}
 	apply_world(saved,true)
 	assert(p.inventory==first,"World roundtrip lost inventory.")
+	assert(save_game(),"Disk save failed.")
+	p.inventory={}
+	assert(load_game(),"Disk load failed.")
+	assert(p.inventory==first,"Disk roundtrip lost inventory.")
 	for preset in range(4):
 		atmosphere.apply_quality(preset,true,true)
 	await get_tree().process_frame
@@ -899,6 +943,17 @@ func render_test() -> void:
 	local_player.rotation.y=-0.06
 	local_player.pitch=-0.12
 	await capture_preview("gameplay")
+	title_camera.position=Vector3(17.5,2.9,36.5)
+	title_camera.look_at(Vector3(9.5,1.5,25.0))
+	title_camera.current=true
+	local_player.position=Vector3(7.7,0.2,31.5)
+	local_player.rotation.y=-PI/4
+	local_player.equipment="rifle"
+	local_player.update_equipment()
+	ui.hud.visible=false
+	await capture_preview("vehicle")
+	local_player.camera.current=true
+	ui.hud.visible=true
 	ui.show_inventory()
 	await capture_preview("inventory")
 	ui.show_settings()

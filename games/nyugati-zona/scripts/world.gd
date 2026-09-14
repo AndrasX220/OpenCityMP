@@ -18,7 +18,10 @@ func generate() -> void:
 	navigation.cell_size=Vector2(2,2)
 	navigation.diagonal_mode=AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
 	navigation.update()
-	Art.box(scenery,Vector3(0,-0.5,0),Vector3(1200,1,1200),Color("#72744c"),true)
+	var ground:MeshInstance3D=Art.box(scenery,Vector3(0,-0.5,0),Vector3(1200,1,1200),Color("#72744c"),true)
+	var ground_material:ShaderMaterial=ShaderMaterial.new()
+	ground_material.shader=load("res://shaders/ground.gdshader")
+	ground.material_override=ground_material
 	road(Vector3(0,0.016,0),Vector3(9,0.03,1000))
 	road(Vector3(0,0.018,-94),Vector3(520,0.032,8),true)
 	road(Vector3(0,0.017,150),Vector3(430,0.03,7),true)
@@ -121,6 +124,7 @@ func generate() -> void:
 			for y in range(a.y,b.y+1):
 				if navigation.is_in_boundsv(Vector2i(x,y)):
 					navigation.set_point_solid(Vector2i(x,y),true)
+	dress_village()
 	Art.bake_static(scenery)
 func occupied(p:Vector3,margin:float=0) -> bool:
 	for rect in footprints:
@@ -228,7 +232,7 @@ func gas_station(p:Vector3) -> void:
 	Art.text3(scenery,"NYUGAT ÜZEMANYAG",p+Vector3(0,4.7,7.57),66)
 	spawn_thing("pump","pump",p+Vector3(-3,0,0),{"liters":450})
 	spawn_thing("pump2","pump",p+Vector3(3,0,0),{"liters":450})
-	spawn_thing("station_gen","generator",p+Vector3(8,0,-7),{"fuel":0.0,"on":false})
+	spawn_thing("station_gen","generator",p+Vector3(7,0,-5),{"fuel":0.0,"on":false})
 	spawn_thing("station_loot","loot",p+Vector3(9,0,8),{"pool":"home","name":"Benzinkúti készletek"})
 func tent(p:Vector3) -> void:
 	Art.roof(scenery,p,5,7,2.7,Color("#5f6949"))
@@ -271,3 +275,44 @@ func spawn_zombie(id:String,p:Vector3,variant:int) -> void:
 	z.health=100+variant*12
 	add_child(z)
 	game.zombies[id]=z
+
+func dress_village() -> void:
+	# Garden trees, hedges, weeds and human traces make the central street lived-in.
+	for side in [-1,1]:
+		for i in range(8):
+			var z:float=62-i*22
+			var tree_pos:Vector3=Vector3(side*34,0,z+6)
+			if not occupied(tree_pos,2):
+				Art.cylinder(scenery,tree_pos+Vector3(0,1.7,0),0.25,3.4,Color("#69513a"),0.17,6)
+				for offset in [Vector3(0,4.6,0),Vector3(-1.6,3.8,0.7),Vector3(1.4,4,-0.4)]:
+					Art.tapered(scenery,tree_pos+offset,Vector3(3.9,3.0,3.5),Color("#697644") if i%2 else Color("#807940"),0.63)
+			for j in range(4):
+				var hedge:Vector3=Vector3(side*(12.2+j*1.45),0.54,z+9)
+				Art.tapered(scenery,hedge,Vector3(1.7,1.0,1.1),Color("#586a3d"),0.83)
+			# Brick gateposts and utility poles with low-hanging cable.
+			for x in [side*10.8,side*13.3]:
+				Art.box(scenery,Vector3(x,0.63,z+6),Vector3(0.35,1.26,0.35),Color("#a08b68"))
+			Art.box(scenery,Vector3(side*7.3,3.3,z+7),Vector3(0.18,6.6,0.18),Color("#8c8065"))
+			Art.box(scenery,Vector3(side*7.3,6.45,z-4),Vector3(0.025,0.025,22),Color("#373e35"))
+	# Denser bands behind the gardens; village navigation remains open.
+	for i in range(300):
+		var side:int=-1 if i%2==0 else 1
+		var p:Vector3=Vector3(side*rng.randf_range(64,120),0,rng.randf_range(-235,120))
+		if occupied(p,4) or absf(p.z+94)<11:continue
+		background_tree(p,rng.randf_range(1.25,2.35),i%3)
+	for i in range(450):
+		var p:Vector3=Vector3(rng.randf_range(-58,58),0,rng.randf_range(-180,90))
+		if absf(p.x)<7 or occupied(p,1) or absf(p.z+94)<6:continue
+		for j in range(2):
+			var tuft:MeshInstance3D=Art.box(scenery,p+Vector3(j*0.07,0.18,0),Vector3(0.05,0.36+rng.randf()*0.12,0.22),Color("#8c8750") if i%3==0 else Color("#666e3d"))
+			tuft.rotation.z=rng.randf_range(-0.3,0.3)
+	# Survivor barricade on the start side and recognisable supply piles.
+	for i in range(5):
+		var plank:MeshInstance3D=Art.box(scenery,Vector3(-10+i*0.55,0.7,49),Vector3(0.16,1.4,0.10),Color("#9d7b4f"))
+		plank.rotation.z=-0.30 if i%2 else 0.3
+	Art.box(scenery,Vector3(-8.8,0.7,49),Vector3(3.5,0.13,0.12),Color("#8b704b"))
+	sign_board(scenery,Vector3(-10,0,54),"EGYÜTT TÚLÉLJÜK",Color("#5a634b"))
+	for i in range(20):
+		var x:float=rng.randf_range(-5,5)
+		var z:float=rng.randf_range(-70,46)
+		Art.box(scenery,Vector3(x,0.058,z),Vector3(0.22,0.016,0.34),Color("#beb79a") if i%2 else Color("#786953"))
