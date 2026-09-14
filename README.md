@@ -1,79 +1,52 @@
-# OpenCityMP
+# OpenCityMP — vidéki vezetési prototípus
 
-Önálló, modolható open-world multiplayer játék alapja **Godot 4.7.2 .NET + C#** technológiával. A vizuális irány szándékosan PS2-korszakú, low-poly, meleg naplementés hangulatú. A projekt nem tartalmaz GTA: San Andreas fájlokat vagy más jogvédett Rockstar asseteket.
+Godot .NET / C# projekt. A fő jelenet most egy **1200 × 1200 méteres** vidéki
+vezetési tesztpályát indít: kb. 2.1 km-es négyszögletes útkör, kavicsos gyakorlóhely,
+ritkás fák, út menti pihenőtető és távoli dombok. A dombok háttérdíszletek;
+a vezetési terület sík. A régi város forrása megmaradt, de nem indul el.
 
-## V0.1 – játszható prototípus
+## Mit tartalmaz?
 
-- teljesen procedurálisan felépülő 3D tesztváros;
-- utcák, sávjelzések, járdák és ütközéssel rendelkező épületek;
-- pálmák, tetőelemek, ablakcsíkok és low-poly parkoló autók;
-- harmadik személyű C# karaktervezérlés;
-- akadályokat kerülő, forgatható és zoomolható kamera;
-- séta, sprint és ugrás;
-- ködös, naplementés PS2/SA-hangulat;
-- ENet multiplayer manager váza;
-- MTA-szerű resource manifest felismerése;
-- példa Lua resource a tervezett API bemutatására.
+- Saját procedurális tesztszedán, arcade vezetés, ütközés, hátramenet és fékezés.
+- Forgó/kormányzott kerekek, egérrel forgatható ütközésérzékeny kamera.
+- Sebességkijelző, visszaállítás és billentyűs súgó.
+- Procedurális ég, melegebb napfény, árnyékok, köd és távoli látkép.
+- A korábbi networking/resource vázak továbbra is a repóban vannak, de ez a jelenet offline.
 
-> Ez az első technikai prototípus. A járművezetés, tényleges hálózati szinkron, Lua futtatás és szerverböngésző a következő verziók feladata.
+**A linkelt Mercedes W210 nincs beépítve.** A jelenlegi tesztautó nem annak modellje.
+A ZIP és az újraterjesztési engedély szükséges az importhoz:
+[W210 import státusz](docs/W210_IMPORT_HU.md).
 
-## Elindítás
+## Indítás
 
-1. Telepítsd a **Godot 4.7.2 .NET** kiadását és a .NET 8 SDK-t.
-2. Klónozd a repót, vagy töltsd le ZIP-ként.
-3. Godot Project Managerben válaszd az **Import** lehetőséget.
-4. Tallózd be a `project.godot` fájlt.
-5. Várd meg a C# projekt visszaállítását, majd nyomj **F6/F5**-öt.
+A jelenlegi csproj Godot.NET.Sdk/4.7.2 és net8.0 értékekkel maradt meg.
+A .NET SDK-t külön telepíteni kell; a runtime önmagában nem elég.
+A helyi Godot .NET editor és a projekt SDK-verziójának egyeznie kell.
 
-```bash
-git clone https://github.com/AndrasX220/OpenCityMP.git
-cd OpenCityMP
-dotnet restore
-```
+1. Csomagold ki a ZIP-et vagy frissítsd a repót.
+2. Importáld a project.godot fájlt Godot .NET-ben.
+3. Build, majd F5.
 
 ## Irányítás
 
-| Művelet | Gomb |
-|---|---|
-| Mozgás | WASD |
-| Futás | bal vagy jobb Shift |
-| Ugrás | Space |
-| Kamera | egér |
-| Kamera távolsága | görgő |
-| Kurzor elengedése | Esc |
-| Kamera visszafogása | bal kattintás |
+W: gáz; S: fék, majd hátramenet; A/D: kormány; Space: erős fék.
+Egér: körbenézés; görgő: kameratávolság; C: kamera alaphelyzet;
+R: autó vissza a rajthoz; Esc: kurzor és fékezés; bal kattintás: vezetés.
 
-## Projektstruktúra
+Az autóban kezdődik a játék. Kiszállás, motorhang, rugózás, driftfizika,
+multiplayer szinkron és Lua-futtatás még nincs.
 
-```text
-OpenCityMP/
-├── project.godot
-├── OpenCityMP.csproj
-├── Scenes/
-│   └── Main.tscn
-├── Scripts/
-│   ├── Main.cs
-│   ├── PlayerController.cs
-│   ├── LowPolyCity.cs
-│   ├── GameUi.cs
-│   ├── Networking/
-│   │   └── NetworkManager.cs
-│   └── Modding/
-│       └── ResourceManager.cs
-└── resources/
-    └── example_resource/
-        ├── resource.json
-        └── server/main.lua
-```
+## Ellenőrzési státusz
 
-## Tervezett mérföldkövek
+A fájlok és GitHub feltöltés ellenőrizve. Ebben a munkamenetben nem állt
+rendelkezésre Godot/.NET futtatókörnyezet, ezért a fordítás és játék közbeni
+működés még **nem tesztelt**. Nem kész Windows EXE, hanem forrásprojekt.
 
-- **V0.2:** vezethető autó, be-/kiszállás, dedicated server, player/vehicle sync és chat.
-- **V0.3:** Lua runtime, eventek, parancsok, createVehicle/createObject és hot reload.
-- **V0.4:** server browser, automatikus resource-letöltés, map editor és egyedi assetek.
-
-Részletesebb bontás: [docs/ROADMAP_HU.md](docs/ROADMAP_HU.md)
-
-## Licenc
-
-A saját OpenCityMP forráskód MIT licencű. Külső modellek vagy hangok későbbi hozzáadásakor azok licence külön ellenőrzendő.
+Helyi ellenőrzés:
+- dotnet restore és dotnet build
+- F5: nincs hiba a Debuggerben
+- W/S és A/D: előre/hátra és kormányzás
+- Space: megállás; fa/pihenőtető/pályahatár: ütközés
+- R: vissza a rajthoz
+- Egér/görgő/C: kamera
+- A kért W210 csak sikeres import és engedélyellenőrzés után kerülhet bele
