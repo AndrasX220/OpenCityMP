@@ -752,7 +752,7 @@ func apply_snapshot(state:Dictionary,restore_position:bool=false) -> void:
 			p.rotation.y=float(d.yaw)
 		for key in ["health","hunger","thirst","bleeding","magazine","rifle_magazine","deaths","swing"]:
 			if d.has(key):p.set(key,d[key])
-		p.inventory=d.get("inventory",{}).duplicate()
+		p.inventory=Data.normalize_inventory(d.get("inventory",{}))
 		p.equipment=str(d.get("equipment","hands"))
 		p.vehicle_id=str(d.get("vehicle",""))
 		if p.mounted!=bool(d.get("mounted",false)):
@@ -769,7 +769,7 @@ func apply_snapshot(state:Dictionary,restore_position:bool=false) -> void:
 			c.rotation.y=c.network_yaw
 		for key in ["fuel","condition","battery","driver","speed"]:
 			c.set(key,d[key])
-		c.cargo=d.get("cargo",{}).duplicate()
+		c.cargo=Data.normalize_inventory(d.get("cargo",{}))
 	for d in state.get("zombies",[]):
 		if not zombies.has(d.id):continue
 		var z:Node=zombies[d.id]
@@ -802,6 +802,7 @@ func apply_world(state:Dictionary,restore_position:bool=false) -> void:
 	for d in state.get("things",[]):
 		var t:Node=world.spawn_thing(str(d.id),str(d.kind),vec_unpack(d.p),d.data,float(d.yaw))
 		t.data=d.data.duplicate(true)
+		if t.data.has("items"):t.data.items=Data.normalize_inventory(t.data.items)
 		if t.kind=="tree" and int(t.data.get("hp",0))>0:
 			t.already_fallen=false
 			t.visual.rotation=Vector3.ZERO

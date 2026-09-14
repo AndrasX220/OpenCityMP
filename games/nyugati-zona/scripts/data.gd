@@ -80,3 +80,15 @@ static func paid(items:Dictionary, cost:Dictionary) -> Dictionary:
 		if result[id]<=0:
 			result.erase(id)
 	return result
+
+static func normalize_inventory(value:Variant) -> Dictionary:
+	var result:Dictionary={}
+	if not value is Dictionary:return result
+	for id in value:
+		if not ITEMS.has(str(id)):continue
+		var amount:Variant=value[id]
+		if not (amount is int or amount is float):continue
+		if not is_finite(float(amount)):continue
+		var count:int=clampi(int(amount),0,100000)
+		if count>0:result[str(id)]=count
+	return result

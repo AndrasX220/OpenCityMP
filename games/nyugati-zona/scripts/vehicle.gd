@@ -21,9 +21,9 @@ func _ready() -> void:
 	visual=Art.car(self,kind,Color("#a93930") if kind=="hatch" else Color("#aa9c70"))
 	var c:CollisionShape3D=CollisionShape3D.new()
 	var s:BoxShape3D=BoxShape3D.new()
-	s.size=Vector3(1.65,1.3,3.7)
+	s.size=Vector3(1.65,1.76,3.7)
 	c.shape=s
-	c.position.y=1.00
+	c.position.y=0.90
 	add_child(c)
 	for x in [-0.57,0.57]:
 		var l:SpotLight3D=SpotLight3D.new()
