@@ -79,6 +79,12 @@ func _ready() -> void:
 	initial_state=pack_world().duplicate(true)
 	if "--smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("smoke_test")
+	elif "--render-test" in OS.get_cmdline_user_args():
+		call_deferred("render_test")
+	elif "--lan-host-test" in OS.get_cmdline_user_args():
+		call_deferred("lan_host_test")
+	elif "--lan-client-test" in OS.get_cmdline_user_args():
+		call_deferred("lan_client_test")
 func authoritative() -> bool:
 	return not net.online or multiplayer.is_server()
 func setup_inputs() -> void:
@@ -865,3 +871,74 @@ func smoke_test() -> void:
 	await get_tree().process_frame
 	print("NYUGATI_ZONA_SMOKE_OK")
 	get_tree().quit(0)
+
+func capture_preview(label:String) -> void:
+	for i in range(8):
+		await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	var img:Image=get_viewport().get_texture().get_image()
+	assert(img!=null and img.get_width()>0,"Rendered viewport is empty.")
+	DirAccess.make_dir_recursive_absolute("res://artifacts")
+	var err:Error=img.save_png("res://artifacts/"+label+".png")
+	assert(err==OK,"Could not save rendered preview.")
+	img.resize(960,540,Image.INTERPOLATE_LANCZOS)
+	var encoded:String=Marshalls.raw_to_base64(img.save_jpg_to_buffer(0.83))
+	for offset in range(0,encoded.length(),3000):
+		print("NZIMG|"+label+"|"+str(offset)+"|"+encoded.substr(offset,3000))
+func render_test() -> void:
+	atmosphere.cycle=false
+	atmosphere.hour=17.35
+	await capture_preview("menu")
+	start_solo(false)
+	atmosphere.cycle=false
+	atmosphere.hour=17.35
+	local_player.inventory={"backpack":1,"axe":1,"pistol":1,"water":2,"beans":2,"bandage":2,"wood":8,"scrap":4,"fuel":1,"ammo":14}
+	local_player.equipment="axe"
+	local_player.update_equipment()
+	local_player.position=Vector3(10,0.2,42)
+	local_player.rotation.y=-0.06
+	local_player.pitch=-0.12
+	await capture_preview("gameplay")
+	ui.show_inventory()
+	await capture_preview("inventory")
+	ui.show_settings()
+	await capture_preview("graphics")
+	get_tree().paused=false
+	print("NYUGATI_ZONA_RENDER_OK")
+	get_tree().quit()
+func lan_host_test() -> void:
+	start_host()
+	assert(net.online,"Host start failed.")
+	var elapsed:float=0
+	while elapsed<25:
+		await get_tree().create_timer(0.1).timeout
+		elapsed+=0.1
+		for id in players:
+			if id==1:continue
+			if int(players[id].inventory.get("water",0))>0 and int(things.start.data.items.get("water",0))==0:
+				print("NYUGATI_ZONA_LAN_HOST_OK")
+				await get_tree().create_timer(1.0).timeout
+				get_tree().quit(0)
+				return
+	push_error("LAN host did not observe authoritative loot transfer.")
+	get_tree().quit(1)
+func lan_client_test() -> void:
+	join_host("127.0.0.1")
+	var elapsed:float=0
+	while not playing and elapsed<12:
+		await get_tree().create_timer(0.1).timeout
+		elapsed+=0.1
+	assert(playing and net.online,"LAN client did not join.")
+	await get_tree().create_timer(1.2).timeout
+	request("take",{"id":"start","item":"water"})
+	elapsed=0
+	while elapsed<8:
+		await get_tree().create_timer(0.1).timeout
+		elapsed+=0.1
+		if local_player and int(local_player.inventory.get("water",0))>0:
+			assert(players.size()==2,"Client roster was not replicated.")
+			print("NYUGATI_ZONA_LAN_CLIENT_OK")
+			get_tree().quit(0)
+			return
+	push_error("LAN client did not receive inventory transfer.")
+	get_tree().quit(1)

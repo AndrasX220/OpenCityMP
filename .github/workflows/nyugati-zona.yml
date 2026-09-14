@@ -33,6 +33,10 @@ jobs:
           PY
       - name: Import and run integration smoke tests
         run: python3 games/nyugati-zona/tools/validate.py
+      - name: Verify real host and client synchronization
+        run: python3 games/nyugati-zona/tools/lan_validate.py
+      - name: Render actual game and graphics UI
+        run: python3 games/nyugati-zona/tools/render_validate.py
       - name: Upload validation logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -41,4 +45,7 @@ jobs:
           path: |
             games/nyugati-zona/import.log
             games/nyugati-zona/smoke.log
+            games/nyugati-zona/lan-*.log
+            games/nyugati-zona/render.log
+            games/nyugati-zona/artifacts/*.png
           if-no-files-found: ignore
